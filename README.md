@@ -116,3 +116,5 @@ Game rules live in plain TypeScript modules that do not depend on React. Every r
 - `src/pages/` contains one component per screen; `src/App.tsx` defines the routes.
 - `src/components/` contains the presentational parts: run header, shop, backpack, item card, rules panel, fight bar, battle view and end-of-run screen.
 - `server/index.js` implements the local API; `server/opponents.js` contains the opponent table.
+
+TEST
