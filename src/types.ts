@@ -1,6 +1,9 @@
 export interface ItemEffects {
   damage?: number;
   block?: number;
+  // Poison adds stacks to the enemy, while heal restores the user's HP.
+  poison?: number;
+  heal?: number;
 }
 
 export interface ItemDef {
@@ -51,13 +54,22 @@ export interface Opponent {
 
 export type Side = "player" | "opponent";
 
+
 export interface FighterSnapshot {
   hp: number;
   maxHp: number;
   block: number;
+  // The current poison stack count is saved in every replay frame.
+  poison: number;
 }
 
-export type BattleEventKind = "damage" | "block";
+export type BattleEventKind =
+  | "damage"
+  | "block"
+  | "poison"
+  | "poison-tick"
+  | "heal";
+
 
 export interface BattleEvent {
   tick: number;
