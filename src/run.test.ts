@@ -152,4 +152,33 @@ describe("B1 - Shop economy", () => {
     expect(updated.nextUid).toBe(purchased.nextUid);
   });
 
+
+  it("does not buy an offer that has already been sold", () => {
+    const run = newRun(123);
+    const purchased = buyItem(run, 0);
+
+    // Buying the same offer twice must not duplicate the item.
+    expect(buyBlocker(purchased, 0)).toBe("Already sold");
+    expect(buyItem(purchased, 0)).toBe(purchased);
+  });
+
+  it("only removes the selected item when selling", () => {
+    const run = newRun(123);
+    const firstPurchase = buyItem(run, 0);
+    const secondPurchase = buyItem(firstPurchase, 1);
+
+    const updated = sellItem(secondPurchase, 0);
+
+    // Selling one item must keep all other backpack items unchanged.
+    expect(updated.backpack[0]).toBeNull();
+    expect(updated.backpack[1]).toEqual(secondPurchase.backpack[1]);
+
+    // The number of owned items must decrease by exactly one.
+    const before = secondPurchase.backpack.filter(Boolean).length;
+    const after = updated.backpack.filter(Boolean).length;
+
+    expect(after).toBe(before - 1);
+  });
+
+
 });
