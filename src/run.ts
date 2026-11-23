@@ -84,8 +84,72 @@ export function sellItem(state: RunState, slotIndex: number): RunState {
   };
 }
 
+/** Checks if an item can be moved to another backpack slot. */
+export function moveBlocker(
+  state: RunState,
+  fromIndex: number,
+  toIndex: number
+): string | null {
+
+  // Check if both slot positions are valid.
+  if (
+    !Number.isInteger(fromIndex) ||
+    !Number.isInteger(toIndex) ||
+    fromIndex < 0 ||
+    toIndex < 0 ||
+    fromIndex >= state.backpack.length ||
+    toIndex >= state.backpack.length
+  ) {
+    return "Invalid backpack slot";
+  }
+
+  // We cannot move an item from an empty slot.
+  if (!state.backpack[fromIndex]) {
+    return "Source slot is empty";
+  }
+
+  // Moving an item to the same slot is not allowed.
+  if (fromIndex === toIndex) {
+    return "Item is already in this slot";
+  }
+
+  return null;
+}
+
+/** Moves an item to an empty slot or swaps two items. */
+export function moveItem(
+  state: RunState,
+  fromIndex: number,
+  toIndex: number
+): RunState {
+
+  // Invalid moves must not change the original state.
+  if (moveBlocker(state, fromIndex, toIndex) !== null) {
+    return state;
+  }
+
+  // Create a copy to avoid modifying the original backpack.
+  const backpack = [...state.backpack];
+
+  // Save the selected item before changing the slots.
+  const selectedItem = backpack[fromIndex];
+
+  // Move the destination item into the original slot.
+  backpack[fromIndex] = backpack[toIndex];
+
+  // Place the selected item into the destination slot.
+  backpack[toIndex] = selectedItem;
+
+  // Return a new run state with the updated backpack.
+  return {
+    ...state,
+    backpack,
+  };
+}
 
 export const REROLL_COST = 1;
+
+
 
 /** Explains why the shop cannot be rerolled, or returns null if it is allowed. */
 export function rerollBlocker(state: RunState): string | null {

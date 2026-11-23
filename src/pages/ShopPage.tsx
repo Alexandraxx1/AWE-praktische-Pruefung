@@ -1,3 +1,4 @@
+
 import { fetchOpponent } from "../api";
 import { Backpack } from "../components/Backpack";
 import { FightBar } from "../components/FightBar";
@@ -5,7 +6,7 @@ import { RulesPanel } from "../components/RulesPanel";
 import { RunHeader } from "../components/RunHeader";
 import { Shop } from "../components/Shop";
 import { fightBlocker, searchFailed, startBattle, startSearch, updateRun } from "../game";
-import { buyItem, rerollShop, sellItem } from "../run";
+import { buyItem, moveItem, rerollShop, sellItem } from "../run";
 import { useActiveGame } from "../state/GameContext";
 
 export function ShopPage() {
@@ -21,10 +22,16 @@ export function ShopPage() {
     update((current) => updateRun(current, (currentRun) => sellItem(currentRun, slotIndex)));
   }
 
-
   function handleReroll() {
     // updateRun ensures that rerolling only works during the shopping phase.
     update((current) => updateRun(current, rerollShop));
+  }
+
+  // Move or swap two backpack slots during the shopping phase.
+  function handleMove(fromIndex: number, toIndex: number) {
+    update((current) =>
+      updateRun(current, (currentRun) => moveItem(currentRun, fromIndex, toIndex))
+    );
   }
 
   // Once the opponent is found the phase becomes "battle" and RequireRoute redirects to the battle page.
@@ -45,11 +52,17 @@ export function ShopPage() {
       <RunHeader run={run} />
       <FightBar phase={phase} blocker={fightBlocker(game)} error={game.error} onFight={handleFindOpponent} />
 
-      {/* While searching, the whole shop/backpack area is disabled so the fighting build can't change. */}
+      {/* Disable all shop and backpack actions while searching. */}
       <fieldset disabled={phase !== "shop"} className="grid min-w-0 gap-4 disabled:opacity-60 lg:grid-cols-[1fr_16rem_18rem]">
         <Shop run={run} onBuy={handleBuy} onReroll={handleReroll} />
-        {/* Connect the backpack Sell buttons to the selling function. */}
-        <Backpack backpack={run.backpack} onSell={handleSell} />
+
+        {/* Connect the backpack buttons to the game state. */}
+        <Backpack
+          backpack={run.backpack}
+          onSell={handleSell}
+          onMove={handleMove}
+        />
+
         <aside className="flex flex-col gap-4">
           <RulesPanel open={run.round === 1} />
         </aside>
