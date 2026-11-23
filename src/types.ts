@@ -125,6 +125,13 @@ export interface BattleReplay {
   frame: number;
 }
 
+
+/** Identifies one opponent search and the round it belongs to. */
+export interface SearchRequest {
+  id: string;
+  round: number;
+}
+
 /** Everything the UI needs: the run plus where in the round loop we are. */
 export interface GameState {
   phase: Phase;
@@ -133,4 +140,7 @@ export interface GameState {
   battle: BattleReplay | null;
   /** Last opponent-search error, shown in the shop. */
   error: string | null;
+
+  // Only the active search is allowed to start a battle.
+  search: SearchRequest | null;
 }
