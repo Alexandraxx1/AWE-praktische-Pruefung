@@ -85,6 +85,32 @@ export function sellItem(state: RunState, slotIndex: number): RunState {
 }
 
 
+export const REROLL_COST = 1;
+
+/** Explains why the shop cannot be rerolled, or returns null if it is allowed. */
+export function rerollBlocker(state: RunState): string | null {
+  if (state.gold < REROLL_COST) return "Not enough gold";
+
+  return null;
+}
+
+/** Replaces the shop offers and charges one gold. */
+export function rerollShop(state: RunState): RunState {
+  // A reroll must not change the run when the player has too little gold.
+  if (rerollBlocker(state) !== null) return state;
+
+  // Use the saved seed to generate four deterministic shop offers.
+  const roll = rollShop(state.seed);
+
+  return {
+    ...state,
+    gold: state.gold - REROLL_COST,
+    shop: roll.offers,
+    seed: roll.seed,
+  };
+}
+
+
 export type RunOutcome = "victory" | "defeat";
 
 /** `victory` / `defeat` once the run is over, otherwise `null`. */

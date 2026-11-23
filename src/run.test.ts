@@ -1,6 +1,15 @@
 
 import { describe, expect, it } from "vitest";
-import { buyBlocker, buyItem, newRun, sellBlocker, sellItem } from "./run";
+import {
+  buyBlocker,
+  buyItem,
+  newRun,
+  rerollBlocker,
+  rerollShop,
+  sellBlocker,
+  sellItem,
+} from "./run";
+import { rollShop } from "./shop";
 
 // These tests verify that buying items follows the shop rules.
 describe("B1 - Shop economy", () => {
@@ -96,6 +105,51 @@ describe("B1 - Shop economy", () => {
     // An invalid slot must not change the run.
     expect(sellBlocker(run, -1)).toBe("Invalid backpack slot");
     expect(sellItem(run, -1)).toBe(run);
+  });
+
+
+  it("rerolls the shop and costs one gold", () => {
+    // Calculate the expected offers using the same saved seed.
+    const run = newRun(123);
+    const expected = rollShop(run.seed);
+
+    const updated = rerollShop(run);
+
+    // The reroll costs one gold and creates four new offers.
+    expect(updated.gold).toBe(9);
+    expect(updated.shop).toEqual(expected.offers);
+    expect(updated.shop).toHaveLength(4);
+
+    // Save the next seed so future shop rolls stay deterministic.
+    expect(updated.seed).toBe(expected.seed);
+
+    // The original run remains unchanged.
+    expect(run.gold).toBe(10);
+  });
+
+  it("does not reroll the shop without enough gold", () => {
+    // Create a run with no gold.
+    const run = {
+      ...newRun(123),
+      gold: 0,
+    };
+
+    // A blocked reroll must leave the entire run unchanged.
+    expect(rerollBlocker(run)).toBe("Not enough gold");
+    expect(rerollShop(run)).toBe(run);
+  });
+
+  it("keeps backpack items when rerolling the shop", () => {
+    // Buy an item before rerolling the shop.
+    const run = newRun(123);
+    const purchased = buyItem(run, 0);
+
+    const updated = rerollShop(purchased);
+
+    // Rerolling changes shop offers but keeps owned items.
+    expect(updated.backpack).toEqual(purchased.backpack);
+    expect(updated.gold).toBe(purchased.gold - 1);
+    expect(updated.nextUid).toBe(purchased.nextUid);
   });
 
 });
