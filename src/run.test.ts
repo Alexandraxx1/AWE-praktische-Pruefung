@@ -1,6 +1,6 @@
 
 import { describe, expect, it } from "vitest";
-import { buyBlocker, buyItem, newRun } from "./run";
+import { buyBlocker, buyItem, newRun, sellBlocker, sellItem } from "./run";
 
 // These tests verify that buying items follows the shop rules.
 describe("B1 - Shop economy", () => {
@@ -56,4 +56,46 @@ describe("B1 - Shop economy", () => {
     // The original run must remain unchanged.
     expect(run.gold).toBe(10);
   });
+
+  it("sells an item for half its price rounded down", () => {
+    // Create a backpack with an Iron Cleaver worth five gold.
+    const run = {
+      ...newRun(123),
+      gold: 3,
+      backpack: [
+        { uid: "item-1", itemId: "iron-cleaver" },
+        null, null, null, null, null,
+      ],
+    };
+
+    // Sell the Iron Cleaver from the first backpack slot.
+    const updated = sellItem(run, 0);
+
+    // Selling an item worth five gold gives two gold.
+    expect(updated.gold).toBe(5);
+
+    // The sold item is removed from its backpack slot.
+    expect(updated.backpack[0]).toBeNull();
+
+    // The original run remains unchanged.
+    expect(run.gold).toBe(3);
+    expect(run.backpack[0]?.itemId).toBe("iron-cleaver");
+  });
+
+  it("does not sell an empty backpack slot", () => {
+    const run = newRun(123);
+
+    // Selling an empty slot must not change the run.
+    expect(sellBlocker(run, 0)).toBe("Empty slot");
+    expect(sellItem(run, 0)).toBe(run);
+  });
+
+  it("does not sell an invalid backpack slot", () => {
+    const run = newRun(123);
+
+    // An invalid slot must not change the run.
+    expect(sellBlocker(run, -1)).toBe("Invalid backpack slot");
+    expect(sellItem(run, -1)).toBe(run);
+  });
+
 });

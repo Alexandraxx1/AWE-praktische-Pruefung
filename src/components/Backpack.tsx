@@ -7,7 +7,14 @@ import type { Backpack as BackpackSlots, ItemDef } from "../types";
 const tooltip = (item: ItemDef) =>
   [item.name, ...describeEffects(item.effects).map(({ label }) => label), `⏱️ every ${item.cooldown * TICK_SECONDS}s`].join("\n");
 
-export function Backpack({ backpack }: { backpack: BackpackSlots }) {
+export function Backpack({
+  backpack,
+  onSell,
+}: {
+  backpack: BackpackSlots;
+  // The parent component provides the selling action.
+  onSell?: (slotIndex: number) => void;
+}) {
   return (
     <section className="rounded-lg border border-panel-edge bg-panel p-4">
       <h2 className="font-display text-xl font-bold">🎒 Backpack</h2>
@@ -31,6 +38,18 @@ export function Backpack({ backpack }: { backpack: BackpackSlots }) {
                     {item.icon}
                   </span>
                   <span className="text-center text-xs leading-tight">{item.name}</span>
+                    {/* Show the Sell button only when selling is available. */}
+                    {onSell && (
+                      <button
+                        type="button"
+                        // Sell the item from its current backpack slot.
+                        onClick={() => onSell(index)}
+                        aria-label={`Sell ${item.name} for ${Math.floor(item.price / 2)} gold`}
+                        className="rounded bg-gold px-2 py-1 text-xs font-semibold text-ink hover:brightness-110"
+                      >
+                        Sell for {Math.floor(item.price / 2)} 🪙
+                      </button>
+                    )}
                 </>
               )}
             </li>
