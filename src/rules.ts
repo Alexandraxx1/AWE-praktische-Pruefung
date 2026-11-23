@@ -10,11 +10,17 @@ import type { ItemEffects } from "./types";
 
 const BATTLE_SECONDS = MAX_TICKS * TICK_SECONDS;
 
-/** Tooltip per item effect. */
+
+/** Explains each item effect when the player hovers over its value. */
 export const EFFECT_HELP: Record<keyof ItemEffects, string> = {
   damage: "Damage: hits the enemy. Block absorbs it first, the rest is lost from HP.",
   block: "Block: absorbs incoming damage until used up. Unused block stays for the rest of the battle.",
+  // Poison stacks deal direct HP damage every 4 ticks and ignore block.
+  poison: "Poison: adds stacks to the enemy. Every 4 ticks (2 seconds), each stack deals 1 HP damage and ignores block. Stacks last for the battle.",
+  // Healing restores HP but cannot increase it above the maximum.
+  heal: "Heal: restores your own HP when the item fires, but never above maximum HP.",
 };
+
 
 export const COOLDOWN_HELP = `Cooldown: the item fires every time this much battle time has passed (1 tick = ${TICK_SECONDS} s).`;
 

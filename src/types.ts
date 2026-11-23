@@ -1,6 +1,9 @@
 export interface ItemEffects {
   damage?: number;
   block?: number;
+  // Poison adds stacks to the enemy, while heal restores the user's HP.
+  poison?: number;
+  heal?: number;
 }
 
 export interface ItemDef {
