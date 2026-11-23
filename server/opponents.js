@@ -5,9 +5,12 @@
  */
 export const OPPONENTS = [
   { id: "mossback-hermit", name: "Mossback Hermit", icon: "🐢", hp: 25, items: ["chipped-dagger", "pot-lid"] },
-  { id: "grave-tinker", name: "Grave Tinker", icon: "🦴", hp: 36, items: ["hunting-bow", "chipped-dagger", "oak-buckler"] },
-  { id: "tollgate-ogre", name: "Tollgate Ogre", icon: "👹", hp: 44, items: ["hunting-bow", "chipped-dagger", "chipped-dagger", "oak-buckler"] },
-  { id: "rusted-knight", name: "Rusted Knight", icon: "🪖", hp: 46, items: ["iron-cleaver", "hunting-bow", "chipped-dagger", "oak-buckler", "pot-lid"] },
+  // Grave Tinker can restore HP with Healing Herb.
+  { id: "grave-tinker", name: "Grave Tinker", icon: "🦴", hp: 36, items: ["hunting-bow", "chipped-dagger", "healing-herb"] },
+  // Tollgate Ogre can apply poison stacks to the hero.
+  { id: "tollgate-ogre", name: "Tollgate Ogre", icon: "👹", hp: 44, items: ["hunting-bow", "poison-dagger", "chipped-dagger", "oak-buckler"] },
+  // Rusted Knight uses poison against the hero and heals itself.
+  { id: "rusted-knight", name: "Rusted Knight", icon: "🪖", hp: 46, items: ["iron-cleaver", "hunting-bow", "poison-dagger", "oak-buckler", "healing-potion"] },
   { id: "pit-gladiator", name: "Pit Gladiator", icon: "🦁", hp: 50, items: ["iron-cleaver", "hunting-bow", "chipped-dagger", "oak-buckler", "pot-lid"] },
   { id: "ash-golem", name: "Ash Golem", icon: "🗿", hp: 56, items: ["iron-cleaver", "hunting-bow", "spiked-shield", "chipped-dagger", "oak-buckler"] },
   { id: "hollow-king", name: "Hollow King", icon: "👑", hp: 64, items: ["iron-cleaver", "hunting-bow", "hunting-bow", "spiked-shield", "oak-buckler", "pot-lid"] },

@@ -28,7 +28,10 @@ export const COOLDOWN_HELP = `Cooldown: the item fires every time this much batt
 export const STATUS_HELP = {
   hp: "HP: reaching 0 is a knockout.",
   block: EFFECT_HELP.block,
+  // Explain the poison stacks shown beside each fighter.
+  poison: "Poison stacks remain for the battle. Every 4 ticks (2 seconds), each stack deals 1 HP damage and ignores block.",
   timer: `After ${BATTLE_SECONDS} s the fighter with the higher share of HP wins; a tie counts as your loss.`,
+
 };
 
 export interface RuleSection {
@@ -54,6 +57,8 @@ export const RULES: RuleSection[] = [
       `Only items in your backpack fight. Their position doesn't matter.`,
     ],
   },
+  
+
   {
     title: "⚔️ Battle",
     rules: [
@@ -62,4 +67,15 @@ export const RULES: RuleSection[] = [
       `Knock the enemy out to win. ${STATUS_HELP.timer} If both fall at once, you lose.`,
     ],
   },
+  {
+    title: "☠️ Poison & 💚 Healing",
+    rules: [
+      // These explanations match the poison and healing mechanics.
+      "Poison items add stacks to the enemy. Stacks remain until the battle ends.",
+      "Every 4 ticks (2 seconds), each poison stack deals 1 HP damage and ignores block.",
+      "Healing items restore HP when their cooldown finishes, but cannot exceed maximum HP.",
+      "Both heroes and opponents can use poison and healing items.",
+    ],
+  },
 ];
+

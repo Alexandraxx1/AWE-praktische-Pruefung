@@ -138,10 +138,20 @@ function FighterPanel({ side, icon, fighter, snapshot }: FighterPanelProps) {
         {fighter.name}
       </h3>
 
+
       <Bar label="HP" value={hp} max={maxHp} text={`${hp} / ${maxHp}`} colour="bg-life" help={STATUS_HELP.hp} />
       <Bar label="Block" value={block} max={maxHp} text={`🛡️ ${block}`} colour="bg-block" help={STATUS_HELP.block} />
 
+      {/* Show the current poison stacks for both fighters. */}
+      <div className="flex justify-between text-sm" title={STATUS_HELP.poison}>
+        <span>☠️ Poison</span>
+        <span className="font-mono" aria-label="Poison stacks">
+          {snapshot.poison} stacks
+        </span>
+      </div>
+
       <ul className="flex flex-wrap gap-1" aria-label="Items">
+
         {fighter.items.map((item, index) => (
           <li key={index} title={item.name} className="rounded bg-ink/50 px-1.5 py-0.5 text-xl">
             {item.icon}
