@@ -1,6 +1,6 @@
 # Backpack Brawl API
 
-The local API is a small Express server in `server/index.js`. It listens on port 4200 (override with the `PORT` environment variable). During Vite development, `/api` is proxied to it, so the frontend uses relative URLs such as `/api/opponents?round=1`. All responses are JSON. The server keeps no state: restarting it changes nothing about the answers.
+The local API is a small Express server in `server/index.js`. It listens on port 4200 (override with the `PORT` environment variable). During Vite development, `/api` is proxied to it, so the frontend uses relative URLs such as `/api/opponents?round=1`. All responses are JSON. The opponent API is deterministic. The Hall of Fame stores scores in server memory, so submitted entries are lost when the server restarts.
 
 ## `GET /api/health`
 
@@ -76,3 +76,145 @@ Example: `API_FAIL=true pnpm server`.
 ## Client
 
 `fetchOpponent(round)` in `src/api.ts` performs the request. It resolves with the `Opponent` on success and throws an `Error` carrying the server's `error` text (or a generic message with the status code) for any non-2xx response. When the API is not running, the Vite proxy answers with an error status of its own, which is reported the same way; a network failure rejects as well.
+
+
+
+## Hall of Fame (B7)
+
+The Hall of Fame allows players to submit finished runs and
+compare their results with other players.
+
+Scores are stored in memory on the Express server.
+They are lost when the server restarts.
+
+### GET /api/hall-of-fame
+
+Returns all submitted scores in ranking order.
+
+**Success — 200**
+
+```json
+{
+  "entries": [
+    {
+      "runId": "7b32e447-15a9-4733-8172-6d8c6ff257a1",
+      "name": "Test Hero",
+      "wins": 5,
+      "lives": 3,
+      "round": 5,
+      "outcome": "victory",
+      "submittedAt": "2026-11-24T13:00:00.000Z"
+    }
+  ]
+}
+```
+
+If there are no scores, the API returns:
+
+```json
+{
+  "entries": []
+}
+```
+
+### POST /api/hall-of-fame
+
+Validates and stores a finished run.
+
+**Example request**
+
+```json
+{
+  "runId": "7b32e447-15a9-4733-8172-6d8c6ff257a1",
+  "name": "Test Hero",
+  "wins": 5,
+  "lives": 3,
+  "round": 5,
+  "outcome": "victory"
+}
+```
+
+**Success — 201**
+
+```json
+{
+  "entry": {
+    "runId": "7b32e447-15a9-4733-8172-6d8c6ff257a1",
+    "name": "Test Hero",
+    "wins": 5,
+    "lives": 3,
+    "round": 5,
+    "outcome": "victory",
+    "submittedAt": "2026-11-24T13:00:00.000Z"
+  }
+}
+```
+
+The server generates `submittedAt` automatically.
+
+### Validation rules
+
+- `runId` must be a valid UUID.
+- `name` must contain 2 to 24 characters after trimming.
+- `wins` must be an integer between 0 and 5.
+- `lives` must be an integer between 0 and 3.
+- `round` must be an integer between 3 and 7.
+- Victory requires 5 wins and at least 1 remaining life.
+- Defeat requires 0 lives and fewer than 5 wins.
+- The round number must equal `wins + (3 - lives)`.
+
+### HTTP status codes
+
+| Status | Meaning |
+|---|---|
+| 200 | Identical run was already submitted |
+| 201 | New score successfully stored |
+| 400 | Invalid or implausible score |
+| 409 | Run ID already exists with different data |
+
+Errors use the following JSON format:
+
+```json
+{
+  "error": "human-readable explanation"
+}
+```
+
+### Ranking rules
+
+Scores are sorted using these rules:
+
+1. Victories before defeats.
+2. More wins rank higher.
+3. Fewer rounds rank higher.
+4. Earlier submissions rank higher when otherwise equal.
+
+### Duplicate prevention
+
+Each new game run receives a unique `runId`.
+
+If the same run is submitted again with identical data,
+the API returns the existing entry with HTTP 200.
+
+If the same `runId` is submitted with different data,
+the API rejects the request with HTTP 409.
+
+The frontend stores the `runId` and submission status in
+localStorage to keep them after refreshing the browser.
+
+### Client implementation
+
+`getHallOfFame()` and `submitHallOfFameScore()` are located
+in `src/hallOfFameApi.ts`.
+
+The Hall of Fame page displays loading, empty, error and
+success states. Failed score submissions can be retried
+without entering the player name again.
+
+### Limitations
+
+Entries are not stored permanently and disappear when the
+API server restarts.
+
+The server validates submitted scores but does not
+independently verify the history of every battle.
