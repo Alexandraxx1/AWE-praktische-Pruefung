@@ -17,8 +17,11 @@ export const EFFECT_HELP: Record<keyof ItemEffects, string> = {
   block: "Block: absorbs incoming damage until used up. Unused block stays for the rest of the battle.",
   // Poison stacks deal direct HP damage every 4 ticks and ignore block.
   poison: "Poison: adds stacks to the enemy. Every 4 ticks (2 seconds), each stack deals 1 HP damage and ignores block. Stacks last for the battle.",
-  // Healing restores HP but cannot increase it above the maximum.
+    // Healing restores HP but cannot increase it above the maximum.
   heal: "Heal: restores your own HP when the item fires, but never above maximum HP.",
+
+  // Burn deals damage more often than poison, but block absorbs it first.
+  burn: "Burn: every 2 ticks (1 second), each stack deals 2 damage. Block absorbs damage first. Burn loses 1 stack after each burn tick.",
 };
 
 
@@ -30,6 +33,10 @@ export const STATUS_HELP = {
   block: EFFECT_HELP.block,
   // Explain the poison stacks shown beside each fighter.
   poison: "Poison stacks remain for the battle. Every 4 ticks (2 seconds), each stack deals 1 HP damage and ignores block.",
+
+  // Burn damages block first and loses one stack after each burn tick.
+  burn: "Burn deals 2 damage per stack every 2 ticks (1 second). Block absorbs damage first. Burn loses 1 stack after each burn tick.",
+  
   timer: `After ${BATTLE_SECONDS} s the fighter with the higher share of HP wins; a tie counts as your loss.`,
 
 };
@@ -75,6 +82,18 @@ export const RULES: RuleSection[] = [
       "Every 4 ticks (2 seconds), each poison stack deals 1 HP damage and ignores block.",
       "Healing items restore HP when their cooldown finishes, but cannot exceed maximum HP.",
       "Both heroes and opponents can use poison and healing items.",
+    ],
+  },
+  {title: "🔥 Fire & 🛡️ Guardian Sets",
+    rules: [
+      // A set becomes active when a fighter owns at least two matching items.
+      "A set bonus activates when a fighter has at least 2 items from the same set.",
+      "Duplicate items also count towards the set bonus.",
+      "Fire set: every Fire item adds 1 extra burn stack when it fires.",
+      "Guardian set: every Guardian item grants 1 extra block when it fires.",
+      "Burn deals 2 damage per stack every 2 ticks (1 second). Block absorbs burn damage first.",
+      "Burn loses 1 stack after each damage tick until it disappears.",
+      "Both the hero and opponents can use set bonuses.",
     ],
   },
 ];

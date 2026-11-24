@@ -1,6 +1,7 @@
+
 import type { ReactNode } from "react";
 import { TICK_SECONDS } from "../battle";
-import { describeEffects } from "../items";
+import { describeEffects, SET_INFO } from "../items";
 import { COOLDOWN_HELP, EFFECT_HELP } from "../rules";
 import type { ItemDef } from "../types";
 
@@ -17,20 +18,36 @@ export function ItemCard({ item, children }: ItemCardProps) {
         <span className="text-3xl leading-none" aria-hidden>
           {item.icon}
         </span>
+
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-display font-bold">{item.name}</h3>
+          <h3 className="truncate font-display font-bold">
+            {item.name}
+          </h3>
+
+          {/* Show the set badge if this item belongs to a set. */}
+          {item.set && (
+            <span
+              title={SET_INFO[item.set].bonus}
+              className="inline-block rounded border border-gold/40 px-2 py-0.5 text-xs text-gold"
+            >
+              {item.set === "fire" ? "🔥" : "🛡️"} {SET_INFO[item.set].name} Set
+            </span>
+          )}
         </div>
       </div>
+
       <ul className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
         {describeEffects(item.effects).map(({ effect, label }) => (
           <li key={effect} title={EFFECT_HELP[effect]} className={HELP}>
             {label}
           </li>
         ))}
+
         <li title={COOLDOWN_HELP} className={`text-muted ${HELP}`}>
           ⏱️ every {item.cooldown * TICK_SECONDS}s
         </li>
       </ul>
+
       {children}
     </article>
   );

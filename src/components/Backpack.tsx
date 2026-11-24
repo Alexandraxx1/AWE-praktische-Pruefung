@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { TICK_SECONDS } from "../battle";
-import { describeEffects, getItem } from "../items";
+import { describeEffects, getActiveSets, getItem, SET_INFO } from "../items";
 import { BACKPACK_COLS } from "../shop";
 import type { Backpack as BackpackSlots, ItemDef } from "../types";
 
@@ -20,6 +20,13 @@ export function Backpack({
 }) {
   // Remember the selected slot only for the user interface.
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
+
+    // Find all items in the backpack and calculate active set bonuses.
+  const itemIds = backpack.flatMap((slot) =>
+    slot ? [slot.itemId] : []
+  );
+
+  const activeSets = getActiveSets(itemIds);
 
   function handleSlotClick(index: number) {
     if (!onMove) return;
@@ -76,6 +83,25 @@ export function Backpack({
         Hover an item to see its stats.
       </p>
 
+            {/* Show which set bonuses are currently active. */}
+      <div className="mb-3 rounded border border-panel-edge p-2 text-sm">
+        <p className="mb-1 font-semibold">Active Set Bonuses</p>
+
+        {activeSets.length === 0 ? (
+          <p className="text-muted">
+            No active bonus. Collect 2 items from the same set.
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-1">
+            {activeSets.map((set) => (
+              <li key={set} title={SET_INFO[set].bonus} className="text-gold">
+                {set === "fire" ? "🔥" : "🛡️"} {SET_INFO[set].name}: Active
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       <ul
         className="grid gap-2"
         style={{
@@ -130,6 +156,16 @@ export function Backpack({
                     <span className="text-center text-xs leading-tight">
                       {item.name}
                     </span>
+
+                    {/* Show the item's set inside the backpack. */}
+                    {item.set && (
+                      <span
+                        title={SET_INFO[item.set].bonus}
+                        className="text-xs text-gold"
+                      >
+                        {item.set === "fire" ? "🔥 Fire" : "🛡️ Guardian"}
+                      </span>
+                    )}
                   </>
                 ) : (
                   <span className="text-xs text-muted">
