@@ -150,6 +150,13 @@ export interface SearchRequest {
 export interface GameState {
   phase: Phase;
   run: RunState;
+
+  //Each run has a unique ID that stays the same after a refresh.
+  runId?: string;
+
+  //Remember wheter the finished run was submitted successfully
+  submitted?: boolean;
+
   /** Set while `phase === "battle"`. */
   battle: BattleReplay | null;
   /** Last opponent-search error, shown in the shop. */

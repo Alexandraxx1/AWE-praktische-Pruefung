@@ -20,8 +20,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const value: GameContextValue = {
     game,
 
-    // Start a new run with a new random seed.
-    startNewRun: () => setGame(newGame(randomSeed())),
+        // Create a new run with a unique ID for the Hall of Fame.
+    startNewRun: () =>
+      setGame({
+        ...newGame(randomSeed()),
+        runId: crypto.randomUUID(),
+        submitted: false,
+      }),
 
     // Apply game changes without modifying the previous state.
     update: (transition) =>
