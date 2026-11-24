@@ -1,3 +1,4 @@
+
 import type { Phase } from "../types";
 
 interface FightBarProps {
@@ -23,10 +24,12 @@ export function FightBar({ phase, blocker, error, onFight }: FightBarProps) {
           <p className="text-sm text-muted">Only items in your backpack fight. Ready when you are.</p>
         )}
       </div>
+
+      {/* Disable the fight button while an opponent search is running. */}
       <button
         type="button"
         onClick={onFight}
-        disabled={blocker !== null}
+        disabled={searching || blocker !== null}
         title={blocker ?? undefined}
         className="shrink-0 rounded-md bg-life px-4 py-2 font-display font-bold text-parchment hover:brightness-110 disabled:bg-panel-edge disabled:text-muted"
       >
