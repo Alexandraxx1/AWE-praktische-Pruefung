@@ -1,19 +1,29 @@
 export interface ItemEffects {
   damage?: number;
   block?: number;
-  // Poison adds stacks to the enemy, while heal restores the user's HP.
+  // Poison and burn add status stacks to the enemy
   poison?: number;
+  burn?: number;
+
+  //Healing restores the fighters own HP
   heal?: number;
 }
+
+//Only these two items sets are available in the game.
+export type ItemSet = "fire" | "guardian";
 
 export interface ItemDef {
   id: string;
   name: string;
   icon: string;
   price: number;
+
   /** Cooldown in battle ticks (1 tick = 0.5 s). */
   cooldown: number;
+
   effects: ItemEffects;
+
+  set?: ItemSet;
 }
 
 /** A concrete item the player owns; several instances may share one `itemId`. */
@@ -59,8 +69,10 @@ export interface FighterSnapshot {
   hp: number;
   maxHp: number;
   block: number;
-  // The current poison stack count is saved in every replay frame.
+
+  // Save both status effects in every battle replay frame.
   poison: number;
+  burn: number;
 }
 
 export type BattleEventKind =
@@ -68,7 +80,9 @@ export type BattleEventKind =
   | "block"
   | "poison"
   | "poison-tick"
-  | "heal";
+  | "heal"
+  | "burn"
+  | "burn-tick";
 
 
 export interface BattleEvent {

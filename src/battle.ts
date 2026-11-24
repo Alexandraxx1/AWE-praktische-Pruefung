@@ -1,6 +1,8 @@
 
 import { getItem } from "./items";
 import { itemIdsOf } from "./shop";
+import {getActiveSets} from "./items";
+
 import type {
   Backpack,
   BattleEvent,
@@ -8,6 +10,7 @@ import type {
   Fighter,
   FighterItem,
   FighterSnapshot,
+  ItemSet,
   Opponent,
   Side,
 } from "./types";
@@ -21,6 +24,8 @@ export const HERO_BASE_HP = 40;
 
 /** Poison deals one HP damage per stack every four ticks (two seconds). */
 export const POISON_INTERVAL = 4;
+export const BURN_INTERVAL = 2;
+export const BURN_DAMAGE_PER_STACK = 2;
 
 /** Turns item ids into a fighter with the catalog values of each item. */
 export function buildFighter(
@@ -56,9 +61,14 @@ interface FighterState {
   hp: number;
   block: number;
   poison: number;
+  burn: number;
 
-  // This item is used to identify poison damage in the combat log.
+  // Remember which items caused the status effects.
   poisonSource: string | null;
+  burnSource: string | null;
+
+  //Store the active sets for this fighter during the battle.
+  activeSets: ItemSet[];
 
   /** Ticks each item has charged towards its cooldown. */
   charge: number[];
@@ -72,6 +82,7 @@ const snapshot = (s: FighterState): FighterSnapshot => ({
   maxHp: s.fighter.maxHp,
   block: s.block,
   poison: s.poison,
+  burn: s.burn,
 });
 
 const isDown = (s: FighterState) => s.hp <= 0;
@@ -141,6 +152,13 @@ export function simulateBattle(
       }
     }
 
+        // Burn deals damage every two ticks and decreases by one stack.
+    if (tick % BURN_INTERVAL === 0) {
+      for (const side of ["player", "opponent"] as const) {
+        applyBurn(state[side], side, emit);
+      }
+    }
+
     winner = knockoutWinner();
 
     frames.push({
@@ -172,6 +190,11 @@ function initState(fighter: Fighter): FighterState {
     block: 0,
     poison: 0,
     poisonSource: null,
+    burn: 0,
+    burnSource: null,
+
+    //Calculate the active sets once ecause items cannot change during the battle
+    activeSets: getActiveSets(fighter.items.map((item) => item.itemId)),
     charge: fighter.items.map(() => 0),
   };
 }
@@ -199,9 +222,20 @@ function resolveItem(
   side: Side,
   emit: (event: Omit<BattleEvent, "tick">) => void,
 ) {
-  const { damage, block, poison, heal } = item.effects;
+  const { damage, block, poison, heal, burn } = item.effects;
   const base = { source: side, itemId: item.itemId };
   const enemySide = other(side);
+
+    // Find the set of the item that is currently firing.
+  const itemSet = getItem(item.itemId).set;
+
+  // Apply the Fire bonus only when the Fire set is active.
+  const fireBonus =
+    itemSet === "fire" && self.activeSets.includes("fire") ? 1 : 0;
+
+  // Apply the Guardian bonus only when the Guardian set is active.
+  const guardianBonus =
+    itemSet === "guardian" && self.activeSets.includes("guardian") ? 1 : 0;
 
   if (damage) {
     const absorbed = Math.min(enemy.block, damage);
@@ -219,15 +253,23 @@ function resolveItem(
     });
   }
 
-  if (block) {
-    self.block += block;
+   if (block || guardianBonus) {
+    // Add the Guardian set bonus to the item's normal block.
+    const totalBlock = (block ?? 0) + guardianBonus;
+
+    self.block += totalBlock;
+
+    // Explain the active set bonus in the combat log.
+    const bonusText = guardianBonus
+      ? " (Guardian set bonus: +1)"
+      : "";
 
     emit({
       ...base,
       target: side,
       kind: "block",
-      amount: block,
-      message: `${item.name} grants ${self.fighter.name} ${block} block`,
+      amount: totalBlock,
+      message: `${item.name} grants ${self.fighter.name} ${totalBlock} block${bonusText}`,
     });
   }
 
@@ -262,6 +304,27 @@ function resolveItem(
       message: `${item.name} heals ${self.fighter.name} for ${restored} HP`,
     });
   }
+
+    if (burn || fireBonus) {
+    // Add one extra burn stack when the Fire set is active.
+    const totalBurn = (burn ?? 0) + fireBonus;
+
+    enemy.burn += totalBurn;
+    enemy.burnSource = item.itemId;
+
+    // Explain the active set bonus in the combat log.
+    const bonusText = fireBonus
+      ? " (Fire set bonus: +1)"
+      : "";
+
+    emit({
+      ...base,
+      target: enemySide,
+      kind: "burn",
+      amount: totalBurn,
+      message: `${item.name} adds ${totalBurn} burn to ${enemy.fighter.name}${bonusText}`,
+    });
+  }
 }
 
 function applyPoison(
@@ -283,6 +346,39 @@ function applyPoison(
     kind: "poison-tick",
     amount: target.poison,
     message: `${target.fighter.name} takes ${target.poison} poison damage (ignores block)`,
+  });
+}
+
+
+/** Apply burn damage and remove one stack afterwards. */
+function applyBurn(
+  target: FighterState,
+  side: Side,
+  emit: (event: Omit<BattleEvent, "tick">) => void,
+) {
+  // Burn does nothing if the fighter has no stacks.
+  if (target.burn === 0 || target.burnSource === null) {
+    return;
+  }
+
+  // Each burn stack deals two damage.
+  const damage = target.burn * BURN_DAMAGE_PER_STACK;
+
+  // Unlike poison, burn damage is absorbed by block first.
+  const absorbed = Math.min(target.block, damage);
+  target.block -= absorbed;
+  target.hp -= damage - absorbed;
+
+  // Burn loses one stack after every damage tick.
+  target.burn = Math.max(0, target.burn - 1);
+
+  emit({
+    source: other(side),
+    target: side,
+    itemId: target.burnSource,
+    kind: "burn-tick",
+    amount: damage,
+    message: `${target.fighter.name} takes ${damage - absorbed} burn damage (${absorbed} blocked). ${target.burn} stacks remain.`,
   });
 }
 
