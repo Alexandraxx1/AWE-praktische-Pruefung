@@ -1,6 +1,6 @@
 import { TICK_SECONDS, MAX_TICKS } from "../battle";
-import { getItem } from "../items";
 import { STATUS_HELP } from "../rules";
+import { getActiveSets, getItem, SET_INFO } from "../items";
 import type { BattleEvent, BattleEventKind, BattleReplay, Fighter, FighterSnapshot, Side } from "../types";
 
 interface BattleViewProps {
@@ -126,6 +126,9 @@ function FighterPanel({ side, icon, fighter, snapshot }: FighterPanelProps) {
   const { hp, maxHp, block } = snapshot;
   const knockedOut = hp <= 0;
 
+  //Find which set bonuses are active for this fighter.
+  const activeSets = getActiveSets(fighter.items.map((item) => item.itemId));
+
   return (
     <article
       aria-label={side === "player" ? "Your hero" : fighter.name}
@@ -150,13 +153,56 @@ function FighterPanel({ side, icon, fighter, snapshot }: FighterPanelProps) {
         </span>
       </div>
 
+            {/* Show the current burn stacks for both fighters. */}
+      <div className="flex justify-between text-sm" title={STATUS_HELP.burn}>
+        <span>🔥 Burn</span>
+        <span className="font-mono" aria-label="Burn stacks">
+          {snapshot.burn} stacks
+        </span>
+      </div>
+
+      {/* Show all set bonuses that are active for this fighter. */}
+      <div className="flex flex-col gap-1 text-sm">
+        <span className="font-semibold">Active Set Bonuses</span>
+
+        {activeSets.length === 0 ? (
+          <span className="text-muted">No active set bonus</span>
+        ) : (
+          activeSets.map((set) => (
+            <span
+              key={set}
+              title={SET_INFO[set].bonus}
+              className="rounded border border-gold/40 px-2 py-1 text-xs"
+            >
+              {set === "fire" ? "🔥" : "🛡️"} {SET_INFO[set].name}: Active
+            </span>
+          ))
+        )}
+      </div>
+
       <ul className="flex flex-wrap gap-1" aria-label="Items">
 
-        {fighter.items.map((item, index) => (
-          <li key={index} title={item.name} className="rounded bg-ink/50 px-1.5 py-0.5 text-xl">
-            {item.icon}
-          </li>
-        ))}
+                {fighter.items.map((item, index) => {
+          // Read the set of each item from the catalog.
+          const itemSet = getItem(item.itemId).set;
+
+          return (
+            <li
+              key={index}
+              title={itemSet ? SET_INFO[itemSet].bonus : item.name}
+              className="flex flex-col items-center gap-1 rounded bg-ink/50 px-2 py-1"
+            >
+              <span className="text-xl">{item.icon}</span>
+
+              {/* Show a badge when the item belongs to a set. */}
+              {itemSet && (
+                <span className="text-xs text-gold">
+                  {SET_INFO[itemSet].name}
+                </span>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </article>
   );
