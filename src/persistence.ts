@@ -32,6 +32,10 @@ export function saveGame(game: GameState | null): void {
       phase: game.phase,
       run: game.run,
 
+      //Keep the run identity and submission status after refreshing.
+      runId: game.runId,
+      submitted: game.submitted,
+
       // Remember the opponent and whether the battle result was applied.
       ...(game.phase === "battle" && game.battle
         ? {
@@ -68,6 +72,31 @@ export function loadGame(): GameState | null {
 
     const run = saved.run;
 
+        // Keep the existing ID or create one for an older saved run.
+    const runId =
+      saved.runId === undefined
+        ? crypto.randomUUID()
+        : typeof saved.runId === "string" &&
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(saved.runId)
+          ? saved.runId
+          : null;
+
+    // Reject invalid submission information.
+    if (
+      !runId ||
+      (saved.submitted !== undefined &&
+        typeof saved.submitted !== "boolean")
+    ) {
+      return null;
+    }
+
+    const submitted = saved.submitted === true;
+
+    // A run can only be submitted after it has finished.
+    if (submitted && saved.phase !== "finished") {
+      return null;
+    }
+
     // Count battles that have already changed wins or lives.
     const completedBattles = run.wins + START_LIVES - run.lives;
 
@@ -80,6 +109,8 @@ export function loadGame(): GameState | null {
       return {
         phase: "shop",
         run,
+        runId,
+        submitted,
         battle: null,
         search: null,
         error:
@@ -98,6 +129,8 @@ export function loadGame(): GameState | null {
       return {
         phase: "finished",
         run,
+        runId,
+        submitted,
         battle: null,
         search: null,
         error: null,
@@ -165,6 +198,8 @@ export function loadGame(): GameState | null {
     return {
       phase: "battle",
       run: resumedRun,
+      runId,
+      submitted,
       search: null,
       error: null,
       battle: {

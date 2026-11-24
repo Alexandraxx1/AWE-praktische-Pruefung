@@ -1,6 +1,11 @@
+
 import { createBrowserRouter, Navigate, RouterProvider } from "react-router";
 import { ROUTES } from "./game";
 import { BattlePage } from "./pages/BattlePage";
+import {
+  HALL_OF_FAME_ROUTE,
+  HallOfFamePage,
+} from "./pages/HallOfFamePage";
 import { Layout } from "./pages/Layout";
 import { ResultPage } from "./pages/ResultPage";
 import { ShopPage } from "./pages/ShopPage";
@@ -14,9 +19,14 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { index: true, element: <StartPage /> },
+
+      // The Hall of Fame can be opened without starting a run.
+      { path: HALL_OF_FAME_ROUTE, element: <HallOfFamePage /> },
+
       { path: ROUTES.shop, element: <RequireRoute route={ROUTES.shop}><ShopPage /></RequireRoute> },
       { path: ROUTES.battle, element: <RequireRoute route={ROUTES.battle}><BattlePage /></RequireRoute> },
       { path: ROUTES.result, element: <RequireRoute route={ROUTES.result}><ResultPage /></RequireRoute> },
+
       { path: "*", element: <Navigate to={ROUTES.start} replace /> },
     ],
   },
