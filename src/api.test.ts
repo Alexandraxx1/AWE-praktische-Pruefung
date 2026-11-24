@@ -85,6 +85,30 @@ describe("B5 - Opponent API", () => {
     );
   });
 
+    it("rejects an opponent with an unknown item", async () => {
+    // Simulate an opponent with an item that does not exist.
+    const invalidOpponent = {
+      ...opponent,
+      items: ["chipped-dagger", "unknown-sword"],
+    };
+
+    // Return the invalid opponent from our mocked API.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify(invalidOpponent), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      ),
+    );
+
+    // An invalid item must not be accepted for a battle.
+    await expect(fetchOpponent(1)).rejects.toThrow(
+      "The arena returned an invalid opponent.",
+    );
+  });
+
   it("stops waiting when the API never responds", async () => {
     vi.useFakeTimers();
 

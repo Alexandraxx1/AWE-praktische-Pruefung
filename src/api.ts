@@ -1,4 +1,4 @@
-
+import { CATALOG } from "./items";
 import type { Opponent } from "./types";
 
 // A search stops waiting after eight seconds.
@@ -48,7 +48,12 @@ export async function fetchOpponent(round: number): Promise<Opponent> {
         !Number.isInteger(opponent.round) ||
         !("items" in opponent) ||
         !Array.isArray(opponent.items) ||
-        !opponent.items.every((item) => typeof item === "string")
+        !opponent.items.every(
+          (item) =>
+            // Every item must be a string and exist in the catalog.
+            typeof item === "string" &&
+            CATALOG.some((catalogItem) => catalogItem.id === item)
+        )
       ) {
         throw new Error(
           "The arena returned an invalid opponent. Please try again.",
